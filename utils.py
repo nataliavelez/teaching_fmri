@@ -13,4 +13,4 @@ def read_json(path):
 
 def write_json(data, path):
     with open(path, 'w') as f:
-        json.dump(data, path)
+        json.dump(data, f)
