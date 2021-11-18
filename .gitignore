@@ -6,3 +6,4 @@ outputs/
 plots/
 reports/
 auth*
+*.asv
