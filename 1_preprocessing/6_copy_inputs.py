@@ -53,7 +53,6 @@ for s in subs:
     # Create output directories
     print('Saving files to: %s\n' % opj(out_dir, s))
     os.makedirs(opj(out_dir, s, 'anat'), exist_ok=True)
-#     os.makedirs(opj(out_dir, s, 'func'), exist_ok=True)
 
     # Find input files
     struct_file = gsearch(fmriprep_dir, s, 'anat', '*space-MNI152NLin2009cAsym_desc-preproc_T1w.nii.gz')
@@ -64,10 +63,6 @@ for s in subs:
     mask_file = mask_file[0]
     print('Mask: %s' % mask_file)
 
-#     func_files = gsearch(smooth_dir, s, 'func', '*smoothed*.nii')
-#     print('%i functional files found' % len(func_files))
-#     print(*func_files, sep='\n')
-
     # Unzip anatomical files
     print('\nCopying structurals...')
     struct_out = struct_file.replace('fmriprep', 'model_inputs').replace('.nii.gz', '.nii')
@@ -77,12 +72,3 @@ for s in subs:
     mask_out = mask_file.replace('fmriprep', 'model_inputs').replace('.nii.gz', '.nii')
     gunzip(mask_file, mask_out)
     print('Mask saved to: %s' % mask_out)
-
-#     # Copy functionals
-#     print('\nCopying functionals...')
-#     func_out = [f.replace('smooth_fmriprep', 'modelspec') for f in func_files]
-#     for f_in, f_out in zip(func_files, func_out):
-#         copyfile(f_in, f_out)
-#         print(f_out)
-        
-

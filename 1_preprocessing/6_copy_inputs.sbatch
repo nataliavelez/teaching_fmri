@@ -12,4 +12,4 @@ module load ncf
 module load Anaconda/5.0.1-fasrc01
 source activate py3
 
-python 5_copy_structurals.py
+python 6_copy_inputs.py
