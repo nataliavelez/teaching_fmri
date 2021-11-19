@@ -5,14 +5,12 @@
 
 %% Experiment directories
 data_dir = '/ncf/gershman/Lab/natalia_teaching/BIDS_data/derivatives';
-fmriprep_dir = fullfile(data_dir, 'fmriprep');
-smooth_dir = fullfile(data_dir, 'smooth_fmriprep'); 
-out_dir = fullfile(data_dir, 'modelspec');
+model_dir = fullfile(data_dir, 'model_inputs');
 
 %% Experiment info
 EXPT.TR = 2;                        % repetition time (seconds)
 EXPT.create_multi = @tomloc_multi;  % handle for function that creates multi structures
-EXPT.modeldir = out_dir; % where to put model results
+EXPT.modeldir = model_dir; % where to put model results
 
 %% Select sample for analysis
 all_subs = 1:30;
@@ -33,18 +31,37 @@ subs = setdiff(all_subs, excluded_subs);
 %% Subject info
 EXPT.subject = struct('modeldir', {}, 'functional', {}, ...
     'structural', {}, 'mask', {});
-s = subs(1);
+for s = 1:length(subs)
+    sub = subs(s);
+    % (1) Output directory
+    sub_id = sprintf('sub-%02d', sub);
+    sub_dir = fullfile(model_dir, sub_id);
+    EXPT.subject(s).modeldir = sub_dir;
 
-% (1) Output directory
-subID = sprintf('sub-%02d', s);
-EXPT.subject(s).modeldir = fullfile(out_dir, subID, 'func');
+    % (2) Structural & mask files
+    struct_query = dir(fullfile(sub_dir, 'anat', ...
+        '*T1w.nii'));
+    EXPT.subject(s).structural = fullfile('anat', struct_query(1).name);
 
-% (2) Structural & mask files
+    mask_query = dir(fullfile(sub_dir, 'anat', ...
+        '*brain_mask.nii'));
+    EXPT.subject(s).mask = fullfile('anat', mask_query(1).name);
 
+    % (3) functional files
+    func_query = dir(fullfile(sub_dir, 'func', ...
+        '*task-tomloc*desc-smoothed*.nii'));
+    sub_funcs = cellfun(@(f) fullfile('func', f), {func_query.name}, ...
+        'UniformOutput', 0);
+    EXPT.subject(s).functional = sub_funcs;
+    
+    % (4) motion regressors
+    mot_query = dir(fullfile(sub_dir, 'func', ...
+        '*task-tomloc*desc-smoothed*.nii'));
+    sub_funcs = cellfun(@(f) fullfile('func', f), {func_query.name}, ...
+        'UniformOutput', 0);
+    EXPT.subject(s).functional = sub_funcs;
+end
 
-% EXPT.subject(1).datadir = 'subject1';                     % where the data are stored
-% EXPT.subject(1).functional = {'run001.nii' 'run002.nii'}; % functional (EPI) nifti files
-% EXPT.subject(1).structural = 'struct.nii';                % structural (T1) nifti files
-% EXPT.subject(2).datadir = 'subject2';                     
-% EXPT.subject(2).functional = {'run001.nii' 'run002.nii'};
-% EXPT.subject(2).structural = 'struct.nii';          
+% Save to file
+out_file = fullfile(model_dir, 'task-tomloc_model-localizer_desc-EXPT.mat');
+save(out_file, 'EXPT');

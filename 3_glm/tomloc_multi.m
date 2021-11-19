@@ -23,7 +23,9 @@ events = readtable(f, 'FileType', 'text');
 disp(events);
 
 % Split by trial type
-multi = struct('names', {}, 'onsets', {}, 'durations', {});
+empty_cells = {{}};
+multi = struct('names', empty_cells, 'onsets', empty_cells, ...
+    'durations', empty_cells);
 conditions = unique(events.trial_type);
 for c = 1:length(conditions)
     % filter data
@@ -35,9 +37,9 @@ for c = 1:length(conditions)
     dur = events(cond_events, 'duration');
     
     % save to structure
-    multi(c).names = cond;
-    multi(c).onsets = table2array(ons)';
-    multi(c).durations = table2array(dur)';
+    multi.names{c} = cond;
+    multi.onsets{c} = table2array(ons)';
+    multi.durations{c} = table2array(dur)';
 end
 
 end
