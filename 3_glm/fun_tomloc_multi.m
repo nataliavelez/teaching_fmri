@@ -1,5 +1,5 @@
-function multi = tomloc_multi(model, subj, run)
-%TOMLOC_MULTI Loads model specification from event files
+function multi = fun_tomloc_multi(model, subj, run)
+%FUN_TOMLOC_MULTI Loads model specification from event files
 %   Inputs
 %       model (int)     # of model to be used (for this task, always 1)
 %       sub (int)       subject #

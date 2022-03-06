@@ -1,17 +1,18 @@
-function glm_inputs(task, model, multi)
+function EXPT=fun_glm_inputs(task, model, multi)
     % Creates EXPT structure for modeling
     % Reference: github.com/sjgershm/ccnl-fmri/wiki/Creating-the-EXPT-structure
     % Natalia Velez, November 2021
 
     %% Experiment directories
     data_dir = '/ncf/gershman/Lab/natalia_teaching/BIDS_data/derivatives';
-    model_dir = fullfile(data_dir, 'model_inputs');
+    in_dir = fullfile(data_dir, 'model_inputs');
 
     %% Experiment info
     EXPT.TR = 2;                        % repetition time (seconds)
     EXPT.create_multi = multi;  % handle for function that creates multi structures
-    EXPT.modeldir = model_dir; % where to put model results
-
+    EXPT.inputdir = in_dir; % where to put model inputs
+    EXPT.modeldir = strrep(in_dir, 'model_inputs', 'glm'); % output dir
+    
     %% Select sample for analysis
     all_subs = 1:30;
 
@@ -31,16 +32,18 @@ function glm_inputs(task, model, multi)
     disp(subs);
 
     %% Subject info
-    EXPT.subject = struct('modeldir', {}, 'functional', {}, ...
+    EXPT.subject = struct('inputdir', {}, 'modeldir', {}, 'functional', {}, ...
         'structural', {}, 'mask', {});
     for s = 1:length(subs)
         sub = subs(s);
         % (1) Output directory
         sub_id = sprintf('sub-%02d', sub);
-        sub_dir = fullfile(model_dir, sub_id);
-        EXPT.subject(s).modeldir = sub_dir;
+        sub_dir = fullfile(in_dir, sub_id);
+        EXPT.subject(s).inputdir = sub_dir;
+        EXPT.subject(s).modeldir = strrep(sub_dir, 'model_inputs', 'glm');
         fprintf('=== #%i: %s ===\n', s, sub_id);
         disp(['Parent directory: ' sub_dir]);
+        disp(['Output directory: ' EXPT.subject(s).modeldir]);
 
         % (2) Structural & mask files
         struct_query = dir(fullfile(sub_dir, 'anat', ...
@@ -73,7 +76,7 @@ function glm_inputs(task, model, multi)
     end
 
     % Save to file
-    out_template = fullfile(model_dir, 'task-%s_model-%s_desc-EXPT.mat');
+    out_template = fullfile(in_dir, 'task-%s_model-%s_desc-EXPT.mat');
     out_file = sprintf(out_template, task, model); 
     disp(['Saving EXPT structure to: ' out_file]);
     save(out_file, 'EXPT');

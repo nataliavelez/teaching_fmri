@@ -2,8 +2,11 @@
 .ipynb_checkpoints/
 __pycache__/
 scratch/
+inputs
 outputs/
 plots/
 reports/
+6_prior/
 auth*
 *.asv
+config.ini

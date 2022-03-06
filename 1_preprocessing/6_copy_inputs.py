@@ -7,6 +7,7 @@
 # Setup:
 import os, gzip, sys
 import numpy as np
+import nibabel as nb
 from os.path import join as opj
 from shutil import copyfile
 
@@ -46,6 +47,24 @@ subs = np.setdiff1d(all_subs, excluded_subs)
 print('Copying over data from %i participants' % len(subs))
 print(subs)
 
+def fix_header(mask_file):
+    '''
+    Fix header info for mask images
+    fmriprep returns header iamges with scl_slope = scl_inter = np.nan,
+    but SPM can't handle nans in the header, so we're changing this to 
+    neutral values.
+    
+    Using fix suggested in: https://github.com/nipreps/fmriprep/issues/2507
+    '''
+    # correct header
+    mask_img = nb.load(mask_file, mmap=False)
+    mask_img.header.set_slope_inter(slope=1, inter=0)
+    
+    # save corrected img to file
+    nb.Nifti1Image(np.array(mask_img.dataobj), None, mask_img.header).to_filename(mask_file)
+    
+    return mask_img.header
+
 # Main loop: Iterate over participants
 for s in subs:
 
@@ -59,10 +78,11 @@ for s in subs:
     struct_file = struct_file[0]
     print('Structural: %s' % struct_file)
 
+    # Copy mask file
     mask_file = gsearch(fmriprep_dir, s, 'anat', '*space-MNI152NLin2009cAsym_desc-brain_mask.nii.gz')
     mask_file = mask_file[0]
     print('Mask: %s' % mask_file)
-
+    
     # Unzip anatomical files
     print('\nCopying structurals...')
     struct_out = struct_file.replace('fmriprep', 'model_inputs').replace('.nii.gz', '.nii')
@@ -72,3 +92,8 @@ for s in subs:
     mask_out = mask_file.replace('fmriprep', 'model_inputs').replace('.nii.gz', '.nii')
     gunzip(mask_file, mask_out)
     print('Mask saved to: %s' % mask_out)
+    
+    # (NEW) Fix mask header
+    fixed_header = fix_header(mask_out)
+    print('Fixed mask header')
+    print(fixed_header)
