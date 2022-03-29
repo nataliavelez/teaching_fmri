@@ -1,0 +1,19 @@
+---
+title: "Teacher performance"
+author: "Natalia Vélez"
+date: "3/28/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lme4)
+library(lmerTest)
+```
+
+Load data:
+```{r load data}
+student_df = read.csv('outputs/student_regression_inputs.csv')
+head(student_df)
+```

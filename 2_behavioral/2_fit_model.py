@@ -1,3 +1,17 @@
+"""Fits the utility-maximizing model and a variety of lesioned models to human data
+
+Usage:
+    ./2_fit_model.py [sub] [m_idx]
+    sub: unique subject identifier
+    int between 1-30 (not including 3 or 17, which are excluded participants)
+    
+    m_idx: model index
+    int between 0-6
+
+Author:
+    Natalia Vélez, March 2022
+"""
+
 import os, sys
 import numpy as np
 import pandas as pd
@@ -9,99 +23,49 @@ from tqdm import tqdm
 sys.path.append('..')
 from utils import write_json
 
-## parse inputs
-_, sub, model = sys.argv
+# parse inputs
+_, sub, m_idx = sys.argv
 sub = int(sub)
+m_idx = int(m_idx)
 
-## load data and free parameters
+# load data and free parameters
 sub_data = teach.human_df[(teach.human_df.subject == sub)].copy()
-all_params = { # DEBUG: Utility-only
-    'utility': {
-        'x0': [0.5, 1], # weight, then temp
-        'args': {
-            'nIter': 20,
-            'data': sub_data
-        },
-        'bounds': [(0,1), (0, None)]
-    },
-    'cost': {
-        'x0': [1], # temp only
-        'args': {
-            'nIter': 1,
-            'w': 0,
-            'data': sub_data
-        },
-        'bounds': [(0, None)]
-    },
-    'pedagogical': {
-        'x0': [0.5], # temp only
-        'args': {
-            'nIter': 20,
-            'w': 1,
-            'data': sub_data
-        },
-        'bounds': [(0, None)]
+
+# select model for fitting
+all_models = [
+    {'label': 'info_pref_cost', 'weights': [None, None, None]}, # full model
+    {'label': 'pref_cost', 'weights': [0, None, None]}, # various lesioned models
+    {'label': 'info_cost', 'weights': [None, 0, None]},
+    {'label': 'info_pref', 'weights': [None, None, 0]},
+    {'label': 'info', 'weights': [None, 0, 0]},
+    {'label': 'pref', 'weights': [0, None, 0]},
+    {'label': 'cost', 'weights': [0, 0, None]},
+]
+model = all_models[m_idx] 
+
+# inputs to scipy.optimize
+param = {
+    'args': {
+        'data': sub_data,
+        'weights': np.array(model['weights']),
+        'pref_fun': teach.edge_pref, # edge preference
+        'nIter': 20
     }
 }
-param = all_params[model]
 
-## create output folders
-out_dir = 'outputs/fit_model-%s_method-optimize/' % model
+# create output folders
+out_dir = 'outputs/fit_model-%s_method-optimize/' % model['label']
+print('Output directory: %s' % out_dir)
 os.makedirs(out_dir, exist_ok=True)
 
-## main method: fit free parameters using scipy.optimize
-# helper fun: returns -loglik
-def eval_fit(x, args):
-    '''Main function: Returns -loglik of data,
-    given parameter settings
-    '''
-    inputs = {}
-    if model == 'utility':
-        inputs['w'], inputs['temp'] = x
-    else:
-        inputs['temp'] = x
-    
-    # merge with other args
-    inputs = {**inputs, **args}
-    
-    # generate model predictions
-    sub_predictions = []
-    for prob, group in sub_data.groupby('problem'): # iterate through all teaching problems
-        pred = teach.fit_utility_model(**inputs)
-        pred = pd.DataFrame(pred)
-        sub_predictions.append(pred)
-        
-    # calculate log likelihood
-    sub_predictions = pd.concat(sub_predictions)
-    sub_predictions['loglik'] = np.log(sub_predictions.lik)
-    loglik = sub_predictions['loglik'].sum()
-    
-    return -loglik
+# run model-fitting
+res = teach.model_optimize('sub-%02d' % sub, **param)
+res = {**res, **model} # combine with model info
 
-# run model fitting
-res = scipy.optimize.minimize(eval_fit, param['x0'], args=param['args'], bounds=param['bounds'], 
-                              method='trust-constr', options={'disp': True})
+print('Result:')
+print(res)
 
-## clean up and save outputs
-def clean_outputs(v):
-    '''Helper function: Cleans up outputs of res to make it easier to save
-    '''
-    
-    if isinstance(v, list):
-        # Critical! Cleans up lists recursively
-        # (some fields have ndarrays nested inside lists)
-        return [clean_outputs(v_i) for v_i in v]
-    elif isinstance(v, np.ndarray):
-        return v.tolist()
-    elif isinstance(v, scipy.sparse.spmatrix):
-        return v.todense().tolist()
-    else:
-        return v
-
-print('Done with model fitting! Cleaning up outputs')
-res_out = {k:clean_outputs(v) for k,v in res.items()}
-print(res_out)
-
-out_file = opj(out_dir, 'sub-%02d_model-%s_method-optimize_result.json') % (sub, model)
+# save model-fitting results to file
+out_file = opj(out_dir, 'sub-%02d_model-%s_method-optimize_result.json') % (sub, model['label'])
 print('Saving results to: %s' % out_file)
-write_json(res_out, out_file)
+write_json(res, out_file)

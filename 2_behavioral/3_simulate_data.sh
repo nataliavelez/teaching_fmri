@@ -1,0 +1,1 @@
+sbatch --array=0-6 3_simulate_data.sbatch

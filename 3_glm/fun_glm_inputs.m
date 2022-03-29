@@ -4,7 +4,7 @@ function EXPT=fun_glm_inputs(task, model, multi)
     % Natalia Velez, November 2021
 
     %% Experiment directories
-    data_dir = '/ncf/gershman/Lab/natalia_teaching/BIDS_data/derivatives';
+    data_dir = '/n/gershman_ncf/Lab/natalia_teaching/BIDS_data/derivatives';
     in_dir = fullfile(data_dir, 'model_inputs');
 
     %% Experiment info

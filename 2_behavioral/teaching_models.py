@@ -46,7 +46,7 @@ def read_coords(e):
 
 print('Cleaning up human behavioral data')
 human_df = pd.read_csv(opj(cwd, 'outputs/teaching_behavior.csv'))
-human_df = human_df.drop(columns=['onset', 'order', 'rating']) # drop columns that are irrelevant for model
+human_df = human_df.drop(columns=['onset', 'rating']) # drop columns that are irrelevant for model
 human_df = human_df[~human_df.subject.isin(excluded)] # exclude wiggly participants
 human_df = human_df[~pd.isna(human_df.example)] # exclude trials where teachers failed to respond
 
@@ -73,7 +73,7 @@ def hypotheses_dataframe(hypotheses):
     '''
     
     hypotheses_flat = np.reshape(hypotheses, (hypotheses.shape[0], hypotheses.shape[1]*hypotheses.shape[2])) #  flatten 3d => 2d array
-
+    
     ### reshape into dataframe of coordinates x hypotheses
     df = pd.DataFrame(hypotheses_flat).stack().rename_axis(['hypothesis', 'idx']).reset_index(name='val')
     
@@ -158,7 +158,7 @@ def sampling_matrix(pD):
     
     return preds
 
-def masked_softmax(col, temp=10):
+def masked_softmax(col, temp=1):
     '''     
     Helper function: Select among viable (non-nan) alternatives
     using a softmax function
@@ -229,7 +229,7 @@ def filter_func(values):
 
 def edge_pref(prob):
     '''
-    Returns an array of examples, weighted by the # of negative examples surrounding each point
+    Returns a dataframe of examples, weighted by the # of negative examples surrounding each point
     '''
     # kernel used to count neighbors
     footprint = np.array([[1,1,1],
@@ -271,7 +271,7 @@ def density_pref(prob):
 
 def typewriter_pref(prob):
     '''
-    Returns an array of examples, weighted by their distance from the top-left corner
+    Returns a dataframe of examples, weighted by their distance from the top-left corner
     (moving left to right, top to bottom)
     '''
     # Weight points by order, starting from top-left corner
@@ -286,11 +286,52 @@ def typewriter_pref(prob):
     typewriter_df = hypotheses_dataframe(typewriter_weights)
     return typewriter_df
 
+def fuzzy_semantics(prob_idx, err=0.5):
+    '''
+    Adds smooth perceptual noise to a teaching problem
+    '''
+    prob = np.array(list(problems[prob_idx].values()))
+    
+    # kernel used to count neighbors
+    footprint = np.array([[1,1,1],
+                          [1,0,1],
+                          [1,1,1]])
+
+    # sample one of the neighbor's values with probability err
+    n_neighbors = np.array([ndimage.generic_filter(h, lambda values: values.sum(), footprint=footprint) for h in prob])
+    sample_neighbors = n_neighbors/8.
+    fuzzy_prob = (1-err)*prob + err*sample_neighbors
+
+    return fuzzy_prob
+
+def uncertainty_pref(prob_idx, err = 0.5):
+    '''
+    Returns a dataframe of examples, weighted by the learner's perceptual uncertainty
+    at each point
+    '''
+    # get not-noisy array
+    prob = np.array(list(problems[prob_idx].values()))
+    
+    # measure learner's uncertainty at each point
+    fuzzy_prob = fuzzy_semantics(prob_idx)
+    uncertainty = fuzzy_prob*np.log(fuzzy_prob)
+    uncertainty = np.nan_to_num(uncertainty, nan=0.0)
+    
+    # weight examples by learner's uncertainty
+    weight_arr = np.multiply(uncertainty, prob)
+    weight_sums = weight_arr.sum(axis=(1,2))
+    uncertainty_weights = np.divide(weight_arr, weight_sums[:, np.newaxis, np.newaxis])
+
+    # compute utility of all possible examples
+    uncertainty_df = hypotheses_dataframe(uncertainty_weights)
+    return  uncertainty_df
+    
 # Dictionary of preference functions
 pref_dict = {
     'edge': edge_pref,
     'density': density_pref,
-    'typewriter': typewriter_pref
+    'typewriter': typewriter_pref,
+    'uncertainty': uncertainty_pref
 }
 
 # COST, based on movement distance
@@ -322,7 +363,7 @@ def movement_cost(prob_idx, past_examples=[], start=0):
 
 
 ## ====== SAMPLING METHOD ====== 
-def utility_sampling(prob_idx, weights=np.ones(3)/3, temp=1, pref_fun=None, past_examples=[], start=0, last_pH=None, nIter=20):
+def utility_sampling(prob_idx, weights=np.ones(3), pref_fun=None, past_examples=[], start=0, last_pH=None, nIter=20):
     '''
     Estimate the teacher's sampling distribution (p_T(d;h)) as a sum of competing goals weighted by weight_vec
     '''
@@ -343,12 +384,12 @@ def utility_sampling(prob_idx, weights=np.ones(3)/3, temp=1, pref_fun=None, past
     
     # utility
     utility = weights[0]*info_value + weights[1]*speaker_pref - weights[2]*cost
-    pD = utility.apply(lambda col: masked_softmax(col, temp=temp))
+    pD = utility.apply(lambda col: masked_softmax(col))
     pD = pD.fillna(0)
     
     return pD, pH
 
-def utility_model_predictions(data=None, pref_fun=None, weights=np.ones(3)/3, temp=1, nIter=20):
+def utility_model_predictions(data=None, pref_fun=None, weights=np.ones(3), nIter=20):
     '''
     Iterate through data and generate model predictions
     '''
@@ -370,7 +411,7 @@ def utility_model_predictions(data=None, pref_fun=None, weights=np.ones(3)/3, te
         out['model'] = 'utility'
 
         # likelihood of observed data, assuming pedagogical sampling
-        pD, pH = utility_sampling(row.problem, pref_fun=pref_fun, past_examples=examples, start=row.cursor, last_pH=pH, nIter=nIter, weights=weights, temp=temp)
+        pD, pH = utility_sampling(row.problem, pref_fun=pref_fun, past_examples=examples, start=row.cursor, last_pH=pH, nIter=nIter, weights=weights)
         out['lik'] = pD['A'].loc[ex]
         out['pD'] = series2tuple(pD['A']) # full sampling distribution
         
@@ -393,7 +434,7 @@ def utility_model_predictions(data=None, pref_fun=None, weights=np.ones(3)/3, te
     return model_outputs
 
 ## ====== GENERATING SIMULATED DATA ====== 
-def simulate_problem(idx, prob, pref_fun=None, weights=np.ones(3)/3, temp=1, nIter=20): 
+def simulate_problem(idx, prob, pref_fun=None, weights=np.ones(3), nIter=20): 
     '''
     Generate simulated data for a single teaching problem using utility-maximizing problem
     & given parameter settings
@@ -406,7 +447,7 @@ def simulate_problem(idx, prob, pref_fun=None, weights=np.ones(3)/3, temp=1, nIt
 
     for trial in range(3):
         # sampling method
-        pD, pH = utility_sampling(prob, weights=weights, temp=temp, pref_fun=pref_fun, past_examples=examples,
+        pD, pH = utility_sampling(prob, weights=weights, pref_fun=pref_fun, past_examples=examples,
                                   start=start, last_pH=pH, nIter=nIter)
         
         # pick out examples
@@ -414,20 +455,20 @@ def simulate_problem(idx, prob, pref_fun=None, weights=np.ones(3)/3, temp=1, nIt
 
         # set things up for next iteration
         examples.append(ex)
-        sim.append((weights, temp, idx, prob, start, ex))
+        sim.append((weights, idx, prob, start, ex))
         start = ex
 
     # clean up outputs
-    sim_df = pd.DataFrame(sim, columns=['weight', 'temp', 'niter', 'problem', 'cursor', 'example'])
+    sim_df = pd.DataFrame(sim, columns=['weight', 'niter', 'problem', 'cursor', 'example'])
     return sim_df
 
-def simulate_dataset(idx, pref_fun=None, weights=np.ones(3)/3, temp=1, nIter=20):
+def simulate_dataset(idx, pref_fun=None, weights=np.ones(3), nIter=20):
     '''
     Generate simulated data for a full run of the task, using the utility-maximizing
     model with given parameter settings
     '''
     # iterate over all weights problems
-    sim_list = [simulate_problem(idx, prob, pref_fun=pref_fun, weights=weights, temp=temp, nIter=nIter) for prob in range(40)]
+    sim_list = [simulate_problem(idx, prob, pref_fun=pref_fun, weights=weights, nIter=nIter) for prob in range(40)]
     
     # clean up outputs
     sim_df = pd.concat(sim_list)
@@ -444,11 +485,12 @@ def eval_fit(x, args):
     # (the latter are used to make lesioned models. each fixed
     # parameter is given a numerical value, and the rest are None)
     # e.g., an info-maximizing model would have weights of: [None, 0, 0]
-    weights = np.where(args['weights'] == None, x[:-1], args['weights'])
+    weights = args['weights'].copy()
+    weights[weights == None] = x
+#   np.where(args['weights'] == None, x, args['weights'])
     
     inputs = {
         'weights': weights,
-        'temp': x[-1]
     }
     
     # merge with other args
@@ -496,14 +538,13 @@ def model_optimize(label:str, *args, **kwargs):
         label: Label for current run of the optimiziation function
         *args, **kwargs: Arguments to scipy.optimize
     '''
-    # Defines defaults, and replaces with user input where applicable
-    x0 = [1./3, 1./3, 1./3, 1.0] if not args else args[0]
-    print(f'Initial guess: {x0}')
+    # Defines defaults, and replaces with user input where applicable    
+    a = kwargs.get('args')
+    n_params = np.sum(a['weights'] == None)
     
     defaults = {
-        'bounds': [(0,1), (0,1), (0,1), (0, None)],
+        'bounds': [(0,None)]*n_params,
         'method': 'SLSQP', 
-        'constraints': {'type': 'eq', 'fun': lambda x: 1-sum(x[:3])}, 
         'options': {'disp': True},
         'args': {
             'nIter': 20,
@@ -512,10 +553,11 @@ def model_optimize(label:str, *args, **kwargs):
         }
     }
     
+    # Initial guess
+    x0 = [1]*n_params
+    print(f'Initial guess: {x0}')
+    
     opts = {**defaults, **kwargs}
-    print(x0)
-    print(args)
-    print(opts)
     
     print('Model fitting using scipy.optimize...')
     # Call to optimizer
