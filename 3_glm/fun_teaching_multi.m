@@ -36,14 +36,17 @@ if strcmp(model, 'parametric')
     disp(events);
 
     % Get all unique conditions from events file
-    conditions = unique(events.trial_type);
+    all_conditions = unique(events.trial_type);
+    pmod_names = {'pTrue', 'KL'}; % param conditions to look out for
+    conditions = setdiff(all_conditions, pmod_names); % valid conds
 
     % Add pmod to multi
-    pmod_names = {'pTrue', 'KL'}; % param conditions to look out for
-    pmod_cells = cell(1,length(conditions));
-    pmod = struct('name', pmod_cells, 'param', pmod_cells, ...
-        'poly', pmod_cells);
+    empty_pmod_cells = cell(1,length(conditions));
+    pmod_cells = cell(1, length(pmod_names));
+    pmod = struct('name', empty_pmod_cells, 'param', empty_pmod_cells, ...
+        'poly', empty_pmod_cells);
     multi.pmod = pmod;
+
 
     for c = 1:length(conditions)
         % filter data
@@ -55,14 +58,22 @@ if strcmp(model, 'parametric')
         dur = events(cond_events, 'duration');
 
         % add parametric regressors to "show" events
-        if ismember(cond, pmod_names)
-            multi.pmod(c).name = {cond};
-            multi.pmod(c).poly = {1};
+        if strcmp(cond, 'show_new')
+            % Initialize parametric modulators for "show" events
+            multi.pmod(c).name = pmod_cells;
+            multi.pmod(c).param = pmod_cells;
+            multi.pmod(c).poly = num2cell(ones(1, length(pmod_names)));
 
-            % get parameter values
-            pmod_table = table2array(events(cond_events, 'value'));
-            pmod_vals = str2double(pmod_table);
-            multi.pmod(c).param = {pmod_vals'};
+            % Fill in values of parametric regressors
+            for p = 1:length(pmod_names)
+                p_name = pmod_names{p};
+                multi.pmod(c).name{p} = p_name;
+                
+                pmod_events = strcmp(events.trial_type, p_name);
+                pmod_table = table2array(events(pmod_events, 'value'));
+                pmod_vals = str2double(pmod_table);
+                multi.pmod(c).param{p} = pmod_vals';
+            end
         end
 
         % save to structure

@@ -1,4 +1,4 @@
-%% script_3_teaching_beta.m
+%% script_7_teaching_beta.m
 % Natalia Velez, March 2022
 % Run beta-series regression for teaching task
 
