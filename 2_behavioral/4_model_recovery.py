@@ -72,8 +72,9 @@ for alt_model in all_models:
     param = {
         'args': {
             'data': sim_data[['problem', 'cursor', 'example']].copy().astype(int),
-            'weights': alt_model['weights'],
+            'weights': np.array(alt_model['weights']),
             'pref_fun': teach.edge_pref,
+            'sampling_fun': alt_model['sampling_fun'],
             'nIter': 20
         }
     }
@@ -83,6 +84,7 @@ for alt_model in all_models:
     res['true_model'] = model['label']
     res['true_weights'] = row['weight']
     res['fit_model'] = alt_model['label']
+    print(res)
 
     res_list.append(res)
 

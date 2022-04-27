@@ -14,6 +14,8 @@ from scipy.spatial import distance
 from scipy.special import softmax
 import scipy.optimize, scipy.sparse
 import scipy.ndimage as ndimage
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 sys.path.append('..')
 from utils import read_json, write_json, int_extract
@@ -66,6 +68,24 @@ human_df['cursor'] = human_df.cursor_coords.apply(read_coords)
 pprint.pprint(human_df.head(15))
 
 ## ====== UTILS ====== 
+def plot_problem(prob_idx):
+    '''
+    Plot a teaching problem. By convention, A is the correct answer.
+    (In practice, the order in which these hypotheses are presented were counterbalanced
+    across students.)
+    '''
+    
+    prob = list(problems[prob_idx].items())
+
+    fig,axes = plt.subplots(1, len(prob), figsize=(4*len(prob), 4))
+    for idx, (k,v) in enumerate(prob):
+        sns.heatmap(v, cmap='Greys', square=True, cbar=False, ax=axes[idx], lw=1, linecolor='#aaa')
+        axes[idx].set(xticklabels=[], yticklabels=[], title=k)
+        
+    fig.suptitle(f'Problem {prob_idx}')
+        
+    return fig
+
 def hypotheses_dataframe(hypotheses):
     '''
     general method: converts (4,6,6) array (used, e.g., in teaching problems, priors, etc.) 
