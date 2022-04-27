@@ -22,7 +22,7 @@ multi = struct('names', empty_cells, 'onsets', empty_cells, ...
     'durations', empty_cells);
     
 % Branch off, depending on value of "model"
-if strcmp(model, 'parametric')
+if contains(model, 'parametric')
     disp('GLM 1: PARAMETRIC REGRESSORS')
     % Read events
     project_dir = '/n/gershman_ncf/Lab/natalia_teaching/BIDS_data/';
@@ -81,7 +81,13 @@ if strcmp(model, 'parametric')
         multi.onsets{c} = table2array(ons)';
         multi.durations{c} = table2array(dur)';
     end
-elseif strcmp(model, 'beta')
+
+    % Turn off orthogonalization
+    dims = size(multi.onsets);
+    orth = zeros(dims);
+    multi.orth = num2cell(orth);
+
+elseif contains(model, 'beta')
     disp('GLM 2: BETA SERIES REGRESSION')
     
     % Read events
@@ -128,4 +134,21 @@ elseif strcmp(model, 'beta')
     multi.durations(show_start:show_end) = table2cell(events(show_events, 'duration'));
     
 end 
+
+% QA: estimate each parametric regressor in a separate GLM
+specific_regressor = regexp(model, 'KL|pTrue', 'match', 'once');
+if ~isempty(specific_regressor)
+    cond_idx = strcmpi(multi.names, 'show_new');
+    pmod_idx = strcmpi(multi.pmod(cond_idx).name, specific_regressor);
+
+    % trim fields not belonging to the specified regressor
+    new_pmod = multi.pmod(cond_idx);
+    for f = fieldnames(new_pmod)';
+        fname = f{1};
+        new_pmod.(fname) = multi.pmod(cond_idx).(fname)(pmod_idx);
+    end
+
+    multi.pmod(cond_idx) = new_pmod; % replace in multi
+end
+
 end

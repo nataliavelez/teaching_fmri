@@ -10,6 +10,7 @@ Usage:
 
 Author:
     Natalia Vélez, March 2022
+    Last updated April 2022
 """
 
 import os, sys
@@ -33,15 +34,27 @@ sub_data = teach.human_df[(teach.human_df.subject == sub)].copy()
 
 # select model for fitting
 all_models = [
-    {'label': 'info_pref_cost', 'weights': [None, None, None]}, # full model
-    {'label': 'pref_cost', 'weights': [0, None, None]}, # various lesioned models
-    {'label': 'info_cost', 'weights': [None, 0, None]},
-    {'label': 'info_pref', 'weights': [None, None, 0]},
-    {'label': 'info', 'weights': [None, 0, 0]},
-    {'label': 'pref', 'weights': [0, None, 0]},
-    {'label': 'cost', 'weights': [0, 0, None]},
+    # Pragmatic listener
+    {'label': 'pragmatic_pref_cost', 'weights': [None, None, None], 'sampling_fun': teach.pedagogical_sampling}, # full model (pragmatic listener)
+    {'label': 'pragmatic_cost', 'weights': [None, 0, None], 'sampling_fun': teach.pedagogical_sampling},
+    {'label': 'pragmatic_pref', 'weights': [None, None, 0], 'sampling_fun': teach.pedagogical_sampling},
+    {'label': 'pragmatic', 'weights': [None, 0, 0], 'sampling_fun': teach.pedagogical_sampling},
+    
+    # April 2022: Literal listener
+    {'label': 'literal_pref_cost', 'weights': [None, None, None], 'sampling_fun': teach.strong_sampling}, # full model (literal listener)
+    {'label': 'literal_cost', 'weights': [None, 0, None], 'sampling_fun': teach.strong_sampling},
+    {'label': 'literal_pref', 'weights': [None, None, 0], 'sampling_fun': teach.strong_sampling},
+    {'label': 'literal', 'weights': [None, 0, 0],  'sampling_fun': teach.strong_sampling},
+    
+    # Belief-free models
+    # (We have to specify a sampling fun anyway, so I went with the fastest)
+    {'label': 'pref_cost', 'weights': [0, None, None], 'sampling_fun': teach.strong_sampling}, # various lesioned models
+    {'label': 'pref', 'weights': [0, None, 0], 'sampling_fun': teach.strong_sampling},
+    {'label': 'cost', 'weights': [0, 0, None], 'sampling_fun': teach.strong_sampling},
 ]
-model = all_models[m_idx] 
+print(f'{len(all_models)} models found')
+model = all_models[m_idx]
+print(f'Fitting model {model["label"]} to sub-{sub:02}')
 
 # inputs to scipy.optimize
 param = {
@@ -49,6 +62,7 @@ param = {
         'data': sub_data,
         'weights': np.array(model['weights']),
         'pref_fun': teach.edge_pref, # edge preference
+        'sampling_fun': model['sampling_fun'],
         'nIter': 20
     }
 }
@@ -61,6 +75,7 @@ os.makedirs(out_dir, exist_ok=True)
 # run model-fitting
 res = teach.model_optimize('sub-%02d' % sub, **param)
 res = {**res, **model} # combine with model info
+del res['sampling_fun']
 
 print('Result:')
 print(res)

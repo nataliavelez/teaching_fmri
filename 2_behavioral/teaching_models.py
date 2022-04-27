@@ -219,6 +219,24 @@ def pedagogical_sampling(prob_idx, past_examples=[], last_pH=None, nIter=10):
         
     return pD, pH
 
+# NEW! Simpler sampling method (for an alternative full model)
+def strong_sampling(prob_idx, past_examples=[], last_pH=None, nIter=10):
+    '''
+    pH is uniformly distributed among hypotheses that are consistent with past examples
+    pD is unformly distributed among available examples
+    
+    We remove columns corresponding to hypotheses that have been ruled out,
+    and rows corresponding to poitns that are not present in any remaining hypotheses.
+    '''
+    
+    hypothesis_space = filter_consistent_examples(prob_idx, past_examples=past_examples)
+    pH = hypothesis_space.div(hypothesis_space.sum(axis=1), axis=0).dropna(axis='index')
+    
+    pD = hypothesis_space.div(hypothesis_space.sum(axis=0), axis=1)
+    pD = pD.loc[pD.sum(axis=1) > 0]
+    
+    return pD, pH
+
 ## SPEAKER PREFERENCES
 # (1) Edge preference
 def filter_func(values):
@@ -363,7 +381,7 @@ def movement_cost(prob_idx, past_examples=[], start=0):
 
 
 ## ====== SAMPLING METHOD ====== 
-def utility_sampling(prob_idx, weights=np.ones(3), pref_fun=None, past_examples=[], start=0, last_pH=None, nIter=20):
+def utility_sampling(prob_idx, weights=np.ones(3), sampling_fun=None, pref_fun=None, past_examples=[], start=0, last_pH=None, nIter=20):
     '''
     Estimate the teacher's sampling distribution (p_T(d;h)) as a sum of competing goals weighted by weight_vec
     '''
@@ -371,7 +389,7 @@ def utility_sampling(prob_idx, weights=np.ones(3), pref_fun=None, past_examples=
     available_examples = filter_consistent_examples(prob_idx, past_examples=past_examples)
     
     # info value
-    _,pH = pedagogical_sampling(prob_idx, past_examples, last_pH, nIter)
+    _,pH = sampling_fun(prob_idx, past_examples, last_pH, nIter)
     info_value = pH.copy().apply(np.log)
     
     # movement cost
@@ -389,7 +407,7 @@ def utility_sampling(prob_idx, weights=np.ones(3), pref_fun=None, past_examples=
     
     return pD, pH
 
-def utility_model_predictions(data=None, pref_fun=None, weights=np.ones(3), nIter=20):
+def utility_model_predictions(data=None, sampling_fun=None, pref_fun=None, weights=np.ones(3), nIter=20):
     '''
     Iterate through data and generate model predictions
     '''
@@ -411,7 +429,7 @@ def utility_model_predictions(data=None, pref_fun=None, weights=np.ones(3), nIte
         out['model'] = 'utility'
 
         # likelihood of observed data, assuming pedagogical sampling
-        pD, pH = utility_sampling(row.problem, pref_fun=pref_fun, past_examples=examples, start=row.cursor, last_pH=pH, nIter=nIter, weights=weights)
+        pD, pH = utility_sampling(row.problem, sampling_fun=sampling_fun, pref_fun=pref_fun, past_examples=examples, start=row.cursor, last_pH=pH, nIter=nIter, weights=weights)
         out['lik'] = pD['A'].loc[ex]
         out['pD'] = series2tuple(pD['A']) # full sampling distribution
         
@@ -423,7 +441,8 @@ def utility_model_predictions(data=None, pref_fun=None, weights=np.ones(3), nIte
         
         # change in beliefs
         out['delta'] = new_belief['A'] - belief_in_true
-        out['KL'] = entropy(new_belief.values, belief)
+        out['KL'] = entropy(new_belief.values, belief)        
+        
         belief = new_belief.values # change values for next round
         belief_in_true = belief[0]
         
@@ -434,7 +453,7 @@ def utility_model_predictions(data=None, pref_fun=None, weights=np.ones(3), nIte
     return model_outputs
 
 ## ====== GENERATING SIMULATED DATA ====== 
-def simulate_problem(idx, prob, pref_fun=None, weights=np.ones(3), nIter=20): 
+def simulate_problem(idx, prob, sampling_fun=None, pref_fun=None, weights=np.ones(3), nIter=20): 
     '''
     Generate simulated data for a single teaching problem using utility-maximizing problem
     & given parameter settings
@@ -447,7 +466,7 @@ def simulate_problem(idx, prob, pref_fun=None, weights=np.ones(3), nIter=20):
 
     for trial in range(3):
         # sampling method
-        pD, pH = utility_sampling(prob, weights=weights, pref_fun=pref_fun, past_examples=examples,
+        pD, pH = utility_sampling(prob, weights=weights, sampling_fun=sampling_fun, pref_fun=pref_fun, past_examples=examples,
                                   start=start, last_pH=pH, nIter=nIter)
         
         # pick out examples
@@ -462,13 +481,13 @@ def simulate_problem(idx, prob, pref_fun=None, weights=np.ones(3), nIter=20):
     sim_df = pd.DataFrame(sim, columns=['weight', 'niter', 'problem', 'cursor', 'example'])
     return sim_df
 
-def simulate_dataset(idx, pref_fun=None, weights=np.ones(3), nIter=20):
+def simulate_dataset(idx, sampling_fun=None, pref_fun=None, weights=np.ones(3), nIter=20):
     '''
     Generate simulated data for a full run of the task, using the utility-maximizing
-    model with given parameter settings
+    mowith given parameter settings
     '''
     # iterate over all weights problems
-    sim_list = [simulate_problem(idx, prob, pref_fun=pref_fun, weights=weights, nIter=nIter) for prob in range(40)]
+    sim_list = [simulate_problem(idx, prob, sampling_fun=sampling_fun, pref_fun=pref_fun, weights=weights, nIter=nIter) for prob in range(40)]
     
     # clean up outputs
     sim_df = pd.concat(sim_list)
