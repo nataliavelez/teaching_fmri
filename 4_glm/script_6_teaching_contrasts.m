@@ -16,4 +16,4 @@ expt_file = ['../../BIDS_data/derivatives/model_inputs/' ...
 load(expt_file, 'EXPT')
 
 %% (2) Estimate contrasts
-ccnl_fmri_con_bids(EXPT,'teaching', 'parametrsicnonortho', contrasts, 1:28);
+ccnl_fmri_con_bids(EXPT,'teaching', 'parametric', contrasts, 1:28);

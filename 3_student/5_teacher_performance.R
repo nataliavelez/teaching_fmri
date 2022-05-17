@@ -6,7 +6,7 @@ library(ggthemes)
 
 # Load student
 print('Loading student data...')
-student_df = read.csv('outputs/student_regression_inputs.csv') %>%
+student_df = read.csv('outputs/student_beliefs.csv') %>%
   mutate_at(c('worker', 'teacher', 'problem'), factor) %>% # categorical vars
   rename(student = worker)
 

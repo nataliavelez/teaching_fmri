@@ -143,12 +143,18 @@ if ~isempty(specific_regressor)
 
     % trim fields not belonging to the specified regressor
     new_pmod = multi.pmod(cond_idx);
-    for f = fieldnames(new_pmod)';
+    for f = fieldnames(new_pmod)'
         fname = f{1};
         new_pmod.(fname) = multi.pmod(cond_idx).(fname)(pmod_idx);
     end
 
     multi.pmod(cond_idx) = new_pmod; % replace in multi
+end
+
+% QA: estimate model with no parametric regressors
+% (used as baseline in model comparison)
+if strcmp(model, 'nonparametric')
+    multi = rmfield(multi, 'pmod');
 end
 
 end

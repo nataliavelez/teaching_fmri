@@ -10,10 +10,10 @@ function fun_QA_teaching_separate(slice)
     addpath(analysis_dir);
     addpath(spm_config_dir);
 
-    param_reg = {'KL', 'pTrue'};
-    for reg=param_reg
+    model_names = {'nonparametric', 'parametricKL', 'parametricpTrue'};
+    for m = 1:length(model_names)
          % (2) Prepare model inputs
-        model = ['parametric' reg{1}];
+        model = model_names{m};
         EXPT=fun_glm_inputs('teaching', model, @fun_teaching_multi);
         
         % (3) Run subject-level modeling

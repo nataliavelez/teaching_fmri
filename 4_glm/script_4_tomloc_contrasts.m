@@ -1,4 +1,4 @@
-%% script_2_tomloc_contrasts.m
+%% script_4_tomloc_contrasts.m
 % Natalia Velez, November 2021
 % Estimate contrasts for ToM localizer
 
