@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 #SBATCH -p fasse
-#SBATCH -t 2:00:00
+#SBATCH -t 60
 #SBATCH -n 1
 #SBATCH --mem 8000
 #SBATCH -o reports/con_%j.out

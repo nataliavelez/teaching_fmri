@@ -132,6 +132,76 @@ elseif contains(model, 'beta')
     multi.names(show_start:show_end) = show_conditions;
     multi.onsets(show_start:show_end) = table2cell(events(show_events, 'onset'));
     multi.durations(show_start:show_end) = table2cell(events(show_events, 'duration'));
+elseif contains(model, 'identifiability')
+    disp('GLM 3: SPLIT BY IDENTIFIABILITY')
+    % Read events
+    project_dir = '/n/gershman_ncf/Lab/natalia_teaching/BIDS_data/';
+    in_dir = fullfile(project_dir, 'derivatives', 'model_events');
+    f_template = fullfile(in_dir, 'sub-%02d', 'func', ...
+        'sub-%02d_task-teaching_run-%02d_model-identifiability_events.tsv');
+    f = sprintf(f_template, subj, subj, run);
+
+    fprintf('Reading events from:\n%s', f);    
+    events = readtable(f, 'FileType', 'text');
+    disp(events);
+
+    % Get all unique conditions from events file
+    all_conditions = unique(events.trial_type);
+    pmod_names = {'pTrue', 'KL'}; % param conditions to look out for
+    conditions = setdiff(all_conditions, pmod_names); % valid conds
+
+    % Add pmod to multi
+    empty_pmod_cells = cell(1,length(conditions));
+    pmod_cells = cell(1, length(pmod_names));
+    pmod = struct('name', empty_pmod_cells, 'param', empty_pmod_cells, ...
+        'poly', empty_pmod_cells);
+    multi.pmod = pmod;
+
+
+    for c = 1:length(conditions)
+        % filter data
+        cond = conditions{c};
+        cond_events = strcmp(events.trial_type, cond);
+
+        % read onsets and durations
+        ons = events(cond_events, 'onset');
+        dur = events(cond_events, 'duration');
+
+        % add parametric regressors to "show" events
+        if contains(cond, 'identifiable')
+            % Initialize parametric modulators for "show" events
+            multi.pmod(c).name = pmod_cells;
+            multi.pmod(c).param = pmod_cells;
+            multi.pmod(c).poly = num2cell(ones(1, length(pmod_names)));
+
+            % Fill in values of parametric regressors
+            for p = 1:length(pmod_names)
+                p_name = pmod_names{p};
+                multi.pmod(c).name{p} = p_name;
+                
+                % split events by condition
+                ident_events = find(contains(events.trial_type, 'identifiable'));
+                cond_events = find(strcmp(events.trial_type, cond));
+                cond_filter = ismember(ident_events, cond_events);
+
+                % add filtered pmod to current condition
+                pmod_events = strcmp(events.trial_type, p_name);
+                pmod_table = table2array(events(pmod_events, 'value'));
+                pmod_vals = str2double(pmod_table)';
+                multi.pmod(c).param{p} = pmod_vals(cond_filter);
+            end
+        end
+
+        % save to structure
+        multi.names{c} = cond;
+        multi.onsets{c} = table2array(ons)';
+        multi.durations{c} = table2array(dur)';
+    end
+
+    % Turn off orthogonalization
+    dims = size(multi.onsets);
+    orth = zeros(dims);
+    multi.orth = num2cell(orth);
     
 end 
 

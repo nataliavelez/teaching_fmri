@@ -1,0 +1,1 @@
+sbatch --array=0-6 exploratory_teaching_identifiability.sbatch
