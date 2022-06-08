@@ -3,7 +3,8 @@
 % Compute model evidences for GLMs
 
 %% (1) Set up environment
-analysis_dir = '/n/gershman_ncf/User/nvelezalicea/fmri_analysis/ccnl-fmri/';
+fmri_dir = '/n/gershman_ncf/User/nvelezalicea/fmri_analysis';
+analysis_dir = fullfile(fmri_dir, 'ccnl-fmri');
 spm_config_dir = fullfile(spm('Dir'), 'config');
 addpath(analysis_dir);
 addpath(spm_config_dir);
@@ -13,7 +14,7 @@ subjects = readtable('../1_preprocessing/outputs/valid_participants.txt');
 subjects = table2array(subjects); 
 
 %% (3) Find ROI files
-roi_labels = {'ACC', 'DMPFC', 'MMPFC', 'PC', 'RSTS', 'RTPJ', 'VMPFC'};
+roi_labels = {'ACC', 'DMPFC', 'LTPJ', 'MMPFC', 'PC', 'RSTS', 'RTPJ', 'VMPFC'};
 data_dir = '/n/gershman_ncf/Lab/natalia_teaching/BIDS_data/derivatives';
 roi_dir = fullfile(data_dir, 'roi_picker');
 
@@ -24,14 +25,20 @@ roi_template = fullfile(roi_dir, 'sub-%02d', 'func', ...
 
 for r = 1:length(roi_labels)
     roi = roi_labels{r};
-    roi_arr = arrayfun(@(s) sprintf(roi_template, s, s, roi), subjects, ...
-        'UniformOutput', false);
-    real_roi =  logical(cellfun(@(r) exist(r, 'file'), roi_arr));
-    roi_paths(real_roi, r) = roi_arr(real_roi);
+    if strcmp(roi, 'ACC')
+        acc_file = fullfile(fmri_dir, 'roi_library', 'fmriprep_space', ...
+            'bilateral_ACCg.nii');
+        roi_paths(:, r) = {acc_file};
+    else
+        roi_arr = arrayfun(@(s) sprintf(roi_template, s, s, roi), subjects, ...
+            'UniformOutput', false);
+        real_roi =  logical(cellfun(@(r) exist(r, 'file'), roi_arr));
+        roi_paths(real_roi, r) = roi_arr(real_roi);
+    end
 end
 
 %% (4) Compute model evidences
-model_labels = {'parametric', 'parametricKL', ...
+model_labels = {'nonparametric', 'parametric', 'parametricKL', ...
     'parametricpTrue'};
 model_struct = struct('model_name', cell(size(model_labels)), ...
     'bic', cell(size(model_labels)));

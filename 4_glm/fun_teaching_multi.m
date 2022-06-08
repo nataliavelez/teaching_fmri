@@ -22,6 +22,14 @@ multi = struct('names', empty_cells, 'onsets', empty_cells, ...
     'durations', empty_cells);
     
 % Branch off, depending on value of "model"
+%% Step 1: Posterior probabilities or log odds?
+if contains(model, 'log')
+    pmod_names = {'logp', 'KL'};
+else
+    pmod_names = {'pTrue', 'KL'};
+end
+
+%% Step 2: Build main GLMs
 if contains(model, 'parametric')
     disp('GLM 1: PARAMETRIC REGRESSORS')
     % Read events
@@ -37,7 +45,7 @@ if contains(model, 'parametric')
 
     % Get all unique conditions from events file
     all_conditions = unique(events.trial_type);
-    pmod_names = {'pTrue', 'KL'}; % param conditions to look out for
+    
     conditions = setdiff(all_conditions, pmod_names); % valid conds
 
     % Add pmod to multi
@@ -132,6 +140,7 @@ elseif contains(model, 'beta')
     multi.names(show_start:show_end) = show_conditions;
     multi.onsets(show_start:show_end) = table2cell(events(show_events, 'onset'));
     multi.durations(show_start:show_end) = table2cell(events(show_events, 'duration'));
+
 elseif contains(model, 'identifiability')
     disp('GLM 3: SPLIT BY IDENTIFIABILITY')
     % Read events
@@ -202,10 +211,10 @@ elseif contains(model, 'identifiability')
     dims = size(multi.onsets);
     orth = zeros(dims);
     multi.orth = num2cell(orth);
-    
 end 
 
-% QA: estimate each parametric regressor in a separate GLM
+%% Step 3: Keep a subset of parametric modulators (used in quality checks)
+% 3.1. estimate each parametric regressor in a separate GLM
 specific_regressor = regexp(model, 'KL|pTrue', 'match', 'once');
 if ~isempty(specific_regressor)
     cond_idx = strcmpi(multi.names, 'show_new');
@@ -221,8 +230,7 @@ if ~isempty(specific_regressor)
     multi.pmod(cond_idx) = new_pmod; % replace in multi
 end
 
-% QA: estimate model with no parametric regressors
-% (used as baseline in model comparison)
+% 3.2. no parametric modulators
 if strcmp(model, 'nonparametric')
     multi = rmfield(multi, 'pmod');
 end

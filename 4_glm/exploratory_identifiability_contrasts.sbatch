@@ -1,11 +1,11 @@
 #!/bin/bash
 #
 #SBATCH -p fasse
-#SBATCH -t 1:30:00
+#SBATCH -t 45
 #SBATCH -n 1
 #SBATCH --mem 8000
-#SBATCH -o reports/model_%j.out
-#SBATCH -e reports/model_%j.err
+#SBATCH -o reports/con_%j.out
+#SBATCH -e reports/con_%j.err
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=nvelez@fas.harvard.edu
 
@@ -13,4 +13,4 @@ module load ncf
 module load matlab/R2021a-fasrc01
 module load spm/12.7487-fasrc01
 
-matlab -nodisplay -nosplash -r "script_4_model_evidence;exit"
+matlab -nodisplay -nosplash -r "script_exploratory_identifiability_contrasts;exit"
