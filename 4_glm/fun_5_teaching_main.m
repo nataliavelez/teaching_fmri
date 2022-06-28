@@ -15,5 +15,5 @@ function fun_5_teaching_main(slice)
     
     %% (3) Run subject-level modeling
     subs = (1:4)+slice*4;
-    ccnl_fmri_glm_bids(EXPT,'teaching','parametric',subs,false);
+    ccnl_fmri_glm_bids(EXPT,'teaching','parametric', subs,false);
 end

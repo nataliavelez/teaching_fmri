@@ -9,7 +9,7 @@ addpath(analysis_dir);
 addpath(spm_config_dir);
 
 %% (2) Prepare inputs to contrasts
-contrasts = {'+pTrue', '+KL'};
+contrasts = {'+pTrue', '-pTrue', '+KL', '-KL'};
 
 expt_file = ['../../BIDS_data/derivatives/model_inputs/' ...
     'task-teaching_model-parametric_desc-EXPT.mat'];

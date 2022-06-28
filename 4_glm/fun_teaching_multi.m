@@ -176,31 +176,6 @@ elseif contains(model, 'identifiability')
         ons = events(cond_events, 'onset');
         dur = events(cond_events, 'duration');
 
-        % add parametric regressors to "show" events
-        if contains(cond, 'identifiable')
-            % Initialize parametric modulators for "show" events
-            multi.pmod(c).name = pmod_cells;
-            multi.pmod(c).param = pmod_cells;
-            multi.pmod(c).poly = num2cell(ones(1, length(pmod_names)));
-
-            % Fill in values of parametric regressors
-            for p = 1:length(pmod_names)
-                p_name = pmod_names{p};
-                multi.pmod(c).name{p} = p_name;
-                
-                % split events by condition
-                ident_events = find(contains(events.trial_type, 'identifiable'));
-                cond_events = find(strcmp(events.trial_type, cond));
-                cond_filter = ismember(ident_events, cond_events);
-
-                % add filtered pmod to current condition
-                pmod_events = strcmp(events.trial_type, p_name);
-                pmod_table = table2array(events(pmod_events, 'value'));
-                pmod_vals = str2double(pmod_table)';
-                multi.pmod(c).param{p} = pmod_vals(cond_filter);
-            end
-        end
-
         % save to structure
         multi.names{c} = cond;
         multi.onsets{c} = table2array(ons)';
