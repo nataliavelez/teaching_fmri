@@ -63,7 +63,7 @@ param = {
         'weights': np.array(model['weights']),
         'pref_fun': teach.edge_pref, # edge preference
         'sampling_fun': model['sampling_fun'],
-        'nIter': 20
+        'nIter': 10
     }
 }
 

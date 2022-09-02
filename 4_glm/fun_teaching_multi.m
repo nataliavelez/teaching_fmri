@@ -10,7 +10,7 @@ function multi = fun_teaching_multi(model, subj, run)
 %   Output
 %       multi (structure)   Model specification. Fields:
 %           names
-%           onsets
+%           onsetsv
 %           durations
 %           pmod.{name, param, poly}
 
@@ -30,13 +30,19 @@ else
 end
 
 %% Step 2: Build main GLMs
-if contains(model, 'parametric')
+if contains(model, 'parametric') || contains(model, 'empirical')
     disp('GLM 1: PARAMETRIC REGRESSORS')
     % Read events
     project_dir = '/n/gershman_ncf/Lab/natalia_teaching/BIDS_data/';
     in_dir = fullfile(project_dir, 'derivatives', 'model_events');
-    f_template = fullfile(in_dir, 'sub-%02d', 'func', ...
-        'sub-%02d_task-teaching_run-%02d_model-main_events.tsv');
+    if contains(model, 'empirical')
+        f_template = fullfile(in_dir, 'sub-%02d', 'func', ...
+            'sub-%02d_task-teaching_run-%02d_model-empirical_events.tsv');
+    else
+        f_template = fullfile(in_dir, 'sub-%02d', 'func', ...
+            'sub-%02d_task-teaching_run-%02d_model-main_events.tsv');
+    end
+
     f = sprintf(f_template, subj, subj, run);
 
     fprintf('Reading events from:\n%s', f);    

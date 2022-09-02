@@ -75,7 +75,7 @@ for alt_model in all_models:
             'weights': np.array(alt_model['weights']),
             'pref_fun': teach.edge_pref,
             'sampling_fun': alt_model['sampling_fun'],
-            'nIter': 20
+            'nIter': 10
         }
     }
 

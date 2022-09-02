@@ -265,25 +265,55 @@ def filter_func(values):
     '''
     return values.sum()
 
+# def edge_pref(prob):
+#     '''
+#     Returns a dataframe of examples, weighted by the # of negative examples surrounding each point
+#     THIS IS THE ORIGINAL, BEFORE THE FIX - NV, Aug 2022
+#     '''
+#     # kernel used to count neighbors
+#     footprint = np.array([[1,1,1],
+#                           [1,0,1],
+#                           [1,1,1]])
+    
+#     # count # neighbors
+#     prob_arr = np.array(list(prob.values()))
+#     n_neighbors = np.array([ndimage.generic_filter(h, filter_func, footprint=footprint) 
+#                             for h in prob.values()])
+
+#     # make array of weights inv. related to number of neighbors
+#     weight_arr = np.multiply(prob_arr, 9-n_neighbors)
+#     weight_sums = weight_arr.sum(axis=(1,2))
+#     edge_weights = np.divide(weight_arr, weight_sums[:, np.newaxis, np.newaxis])
+    
+#     # save as dataframe
+#     edge_df = hypotheses_dataframe(edge_weights)
+#     return edge_df
+
 def edge_pref(prob):
     '''
     Returns a dataframe of examples, weighted by the # of negative examples surrounding each point
     '''
+    
     # kernel used to count neighbors
     footprint = np.array([[1,1,1],
                           [1,0,1],
                           [1,1,1]])
-    
-    # count # neighbors
+
+    # expand array
     prob_arr = np.array(list(prob.values()))
-    n_neighbors = np.array([ndimage.generic_filter(h, filter_func, footprint=footprint) 
-                            for h in prob.values()])
+    h_expanded = np.zeros((4,8,8), dtype=int)
+    h_expanded[:,1:7,1:7] = prob_arr
+
+    # count # neighbors
+    expanded_neighbors = np.array([ndimage.generic_filter(h_expanded[h,:,:], filter_func, footprint=footprint) 
+                                   for h in range(4)])
 
     # make array of weights inv. related to number of neighbors
+    n_neighbors = expanded_neighbors[:, 1:7, 1:7]
     weight_arr = np.multiply(prob_arr, 9-n_neighbors)
     weight_sums = weight_arr.sum(axis=(1,2))
     edge_weights = np.divide(weight_arr, weight_sums[:, np.newaxis, np.newaxis])
-    
+
     # save as dataframe
     edge_df = hypotheses_dataframe(edge_weights)
     return edge_df

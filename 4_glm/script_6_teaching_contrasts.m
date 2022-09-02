@@ -1,4 +1,4 @@
-%% script_6_tomloc_contrasts.m
+%% script_6_teaching_contrasts.m
 % Natalia Velez, March 2022
 % Estimate contrasts for teaching task
 
