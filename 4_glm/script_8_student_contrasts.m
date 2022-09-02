@@ -1,4 +1,4 @@
-%% script_9_strudent_contrasts.m
+%% script_8_strudent_contrasts.m
 % Natalia Velez, last updated August 2022
 % Estimate contrasts for parametric regressors empirically derived from 
 % student data

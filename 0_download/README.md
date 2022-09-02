@@ -1,6 +1,6 @@
 # Download & format raw data
 
-In this directory: 
+Contents:
 
 * `session_labels.txt`: Labels of sessions to pull from CBSCentral
 * `0_bids_config.ipynb`: Configure the files for conversion to BIDS (e.g., specifying which functional runs belong which task, and which fieldmaps correspond to which functional runs)
