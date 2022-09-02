@@ -14,4 +14,4 @@ These scripts are numbered in the order you would need to execute them to fully 
 
 This repository contains the code used to analyze this project from start to finish, from downloading MRI data to generating figures for publication. Directories and files are numbered in the order they should be run. For example, every script in `0_download` should be run before the scripts in `1_preprocessing` and, within that folder, `0_bids_config` should be run before `1_download_sessions`. Running these scripts out of order may raise errors, as later-numbered scripts rely on intermediate outputs from earlier ones.
 
-<div style="background-color:#d7f2fa;padding:10px;border-radius:5px;">A computationally reproducible version of these analyses is in the works—please check back soon!</div>
+{% A computationally reproducible version of these analyses is in the works—please check back soon! %}
