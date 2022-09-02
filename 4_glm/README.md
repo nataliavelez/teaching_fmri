@@ -16,3 +16,4 @@ Contents:
 * `8_student_contrasts.sh`: Estimate contrasts for empirically-derived regressors
 * `QA_1_teaching_separate.sh`: Estimate parametric regressors from GLM1 in two separate GLMs (GLM 3-4)
 * `QA_2_separate_contrasts.sbatch`: Estimate contrasts for GLM 3-4
+* `QA_3_glm_correlations.ipynb`: Check correlations between parametric regressors

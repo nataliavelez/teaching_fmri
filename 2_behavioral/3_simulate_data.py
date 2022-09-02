@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # QA: Simulate data based on parameters fit to participants' data
+# Simulate data based on parameters fit to participants' data
 # Natalia Vélez, March 2022
 
 import os, sys
@@ -31,7 +31,7 @@ all_models = [
     {'label': 'pragmatic_pref', 'weights': [None, None, 0], 'sampling_fun': teach.pedagogical_sampling},
     {'label': 'pragmatic', 'weights': [None, 0, 0], 'sampling_fun': teach.pedagogical_sampling},
     
-    # April 2022: Literal listener
+    # Literal listener
     {'label': 'literal_pref_cost', 'weights': [None, None, None], 'sampling_fun': teach.strong_sampling}, # full model (literal listener)
     {'label': 'literal_cost', 'weights': [None, 0, None], 'sampling_fun': teach.strong_sampling},
     {'label': 'literal_pref', 'weights': [None, None, 0], 'sampling_fun': teach.strong_sampling},
