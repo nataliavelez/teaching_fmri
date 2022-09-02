@@ -1,7 +1,8 @@
 # Neurocomputational mechanisms of teaching
-Natalia Vélez, October 2021--September 2022
+Natalia Vélez, October 2021-September 2022
 
 **Table of contents**
+
 These scripts are numbered in the order you would need to execute them to fully reproduce the results of this project.
 
 * `utils.py`: A project-specific module containing commonly-used functions
