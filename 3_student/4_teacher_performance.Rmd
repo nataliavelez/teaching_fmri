@@ -2,7 +2,8 @@
 title: "Random effects by teacher/problem"
 author: "Natalia Vélez"
 date: "7/26/2022"
-output: html_document
+output:
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -61,6 +62,7 @@ ggplot(teacher_eff, aes(x = reorder(subject, -random_intercept), y = random_inte
         axis.text.x = element_blank())
 ggsave('plots/teacher_ranef.pdf', width=6.73, height=6.73/2)
 ```
+
 Check: How much did people make for the worst and best teachers?
 ```{r}
 performance_by_teacher = student_df %>%
@@ -71,9 +73,16 @@ performance_by_teacher = student_df %>%
             sd_bonus = sd(bonus)) %>%
   rename(subject = teacher) %>%
   left_join(teacher_eff) %>%
-  arrange(-random_intercept)
-```
+  arrange(-random_intercept) %>%
+  ungroup()
 
+print('Best teacher:')
+print(head((performance_by_teacher)))
+
+print('Worst teacher:')
+print(tail((performance_by_teacher)))
+```
+Check: Are random intercepts correlated with average performance (as indexed by the amount of bonus awarded)?
 ```{r}
 ggplot(performance_by_teacher, aes(x=avg_bonus, y=random_intercept)) +
   geom_point() +
@@ -114,4 +123,14 @@ performance_by_problem = student_df %>%
             sd_bonus = sd(bonus)) %>%
   left_join(problem_eff) %>%
   arrange(-random_intercept)
+
+head(performance_by_problem)
+tail(performance_by_problem)
+```
+
+Check: Are random intercepts correlated with average performance (as indexed by the amount of bonus awarded)?
+```{r}
+ggplot(performance_by_problem, aes(x=avg_bonus, y=random_intercept)) +
+  geom_point() +
+  geom_smooth(method='lm')
 ```
