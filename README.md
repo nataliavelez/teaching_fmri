@@ -1,5 +1,5 @@
-#Mentalizing regions and anterior cingulate cortex represent learners’ beliefs during teaching
-Natalia Vélez
+# Mentalizing regions and anterior cingulate cortex represent learners’ beliefs during teaching
+Natalia Vélez <br />
 Last updated September 2022
 
 **Table of contents**
