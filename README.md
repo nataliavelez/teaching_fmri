@@ -1,5 +1,6 @@
-# Neurocomputational mechanisms of teaching
-Natalia Vélez, October 2021-September 2022
+#Mentalizing regions and anterior cingulate cortex represent learners’ beliefs during teaching
+Natalia Vélez
+Last updated September 2022
 
 **Table of contents**
 
