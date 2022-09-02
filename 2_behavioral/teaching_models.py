@@ -27,13 +27,11 @@ print('Loading teaching problems')
 problems = read_json(opj(cwd, 'inputs/problems.json'))
 pprint.pprint(problems[0])
 
-
 # Load exclusions:
 print('Participants excluded from analysis:')
 excluded = np.loadtxt('../1_preprocessing/outputs/excluded_participants.txt', dtype=str)
 excluded = [int_extract('[0-9]+', s) for s in excluded]
 print(excluded)
-
 
 # Load teaching data:
 def read_coords(e):
@@ -318,45 +316,10 @@ def edge_pref(prob):
     edge_df = hypotheses_dataframe(edge_weights)
     return edge_df
 
-def density_pref(prob):
-    '''
-    Returns an array of examples, weighted by how often a given positive example occurs
-    across all four choice alternatives
-    '''
-    
-    # Calculate density (# of problems that share a point)
-    prob_arr = np.array(list(prob.values()))
-    density = np.sum(prob_arr, axis=0)/4
-
-    # Convert density back into array of utterance weights
-    weight_arr = density*prob_arr
-    weight_sums = weight_arr.sum(axis=(1,2))
-    density_weights = np.divide(weight_arr, weight_sums[:, np.newaxis, np.newaxis])
-    
-    # save as dataframe
-    density_df = hypotheses_dataframe(density_weights)
-    return density_df
-
-def typewriter_pref(prob):
-    '''
-    Returns a dataframe of examples, weighted by their distance from the top-left corner
-    (moving left to right, top to bottom)
-    '''
-    # Weight points by order, starting from top-left corner
-    typewriter = np.reshape(36 - np.arange(36), (6,6))
-
-     # Convert weights back into speaker preference
-    weight_arr = np.array([np.multiply(h, typewriter) for h in prob.values()])
-    weight_sums = weight_arr.sum(axis=(1,2))
-    typewriter_weights = np.divide(weight_arr, weight_sums[:, np.newaxis, np.newaxis])
-    
-    # save as dataframe
-    typewriter_df = hypotheses_dataframe(typewriter_weights)
-    return typewriter_df
-
 def fuzzy_semantics(prob_idx, err=0.5):
     '''
     Adds smooth perceptual noise to a teaching problem
+    (Using this to explore one possible interpretation of the edge preference)
     '''
     prob = np.array(list(problems[prob_idx].values()))
     
@@ -397,8 +360,6 @@ def uncertainty_pref(prob_idx, err = 0.5):
 # Dictionary of preference functions
 pref_dict = {
     'edge': edge_pref,
-    'density': density_pref,
-    'typewriter': typewriter_pref,
     'uncertainty': uncertainty_pref
 }
 
