@@ -1,4 +1,4 @@
-%% script_6_separate_contrasts.m
+%% script_QA_separate_contrasts.m
 % Natalia Velez, April 2022
 % Estimate contrasts for teaching task from separate GLMs
 

@@ -30,17 +30,35 @@ else
 end
 
 %% Step 2: Build main GLMs
-if contains(model, 'parametric') || contains(model, 'empirical')
+param_models = {'empirical', 'parametric', 'pragmatic', 'control', ...
+    'blended', 'empiricalBlended'};
+is_param = any(cellfun(@(m) contains(model, m), param_models));
+if is_param
     disp('GLM 1: PARAMETRIC REGRESSORS')
     % Read events
     project_dir = '/n/gershman_ncf/Lab/natalia_teaching/BIDS_data/';
     in_dir = fullfile(project_dir, 'derivatives', 'model_events');
+
     if contains(model, 'empirical')
         f_template = fullfile(in_dir, 'sub-%02d', 'func', ...
-            'sub-%02d_task-teaching_run-%02d_model-empirical_events.tsv');
-    else
+                'sub-%02d_task-teaching_run-%02d_model-empirical_events.tsv');
+    elseif contains(model, 'control')
         f_template = fullfile(in_dir, 'sub-%02d', 'func', ...
-            'sub-%02d_task-teaching_run-%02d_model-main_events.tsv');
+                'sub-%02d_task-teaching_run-%02d_model-control_events.tsv');
+    elseif contains(model, 'pragmatic')
+        f_template = fullfile(in_dir, 'sub-%02d', 'func', ...
+                'sub-%02d_task-teaching_run-%02d_model-pragmatic_events.tsv');
+    elseif contains(model, 'parametric')
+        f_template = fullfile(in_dir, 'sub-%02d', 'func', ...
+                'sub-%02d_task-teaching_run-%02d_model-main_events.tsv');
+    elseif contains(model, 'blended')
+        pmod_names{end+1} = 'time';
+        f_template = fullfile(in_dir, 'sub-%02d', 'func', ...
+                'sub-%02d_task-teaching_run-%02d_model-blended_events.tsv');
+    elseif contains(model, 'empiricalBlended')
+        pmod_names{end+1} = 'time';
+        f_template = fullfile(in_dir, 'sub-%02d', 'func', ...
+            'sub-%02d_task-teaching_run-%02d_model-empiricalBlended_events.tsv');
     end
 
     f = sprintf(f_template, subj, subj, run);
@@ -60,7 +78,6 @@ if contains(model, 'parametric') || contains(model, 'empirical')
     pmod = struct('name', empty_pmod_cells, 'param', empty_pmod_cells, ...
         'poly', empty_pmod_cells);
     multi.pmod = pmod;
-
 
     for c = 1:length(conditions)
         % filter data

@@ -1,1 +1,2 @@
-sbatch --array=0-6 5_teaching_main.sbatch
+STUDS=2,3,8,21
+sbatch --array=$STUDS 5_teaching_main.sbatch

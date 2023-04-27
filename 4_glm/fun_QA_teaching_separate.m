@@ -1,4 +1,4 @@
-function fun_QA_teaching_separate(slice)
+function fun_QA_teaching_separate(model_type, slice)
     %% fun_QA_teaching_separate
     % Natalia Velez, April 2022
     % QA: Estimate each parametric regressor in a separate GLM
@@ -10,7 +10,8 @@ function fun_QA_teaching_separate(slice)
     addpath(analysis_dir);
     addpath(spm_config_dir);
 
-    model_names = {'nonparametric', 'parametricKL', 'parametricpTrue'};
+    model_names = strcat(model_type, {'', 'KL', 'pTrue'});
+
     for m = 1:length(model_names)
          % (2) Prepare model inputs
         model = model_names{m};
@@ -18,7 +19,7 @@ function fun_QA_teaching_separate(slice)
         
         % (3) Run subject-level modeling
         subs = (1:4)+slice*4;
-        ccnl_fmri_glm_bids(EXPT,'teaching', model,subs,false);
+        ccnl_fmri_glm_bids(EXPT,'teaching', model, subs,false);
     end
     
 end

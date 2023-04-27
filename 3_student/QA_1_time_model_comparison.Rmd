@@ -1,0 +1,109 @@
+---
+title: 'QA: Controlling for time'
+author: "Natalia Vélez"
+date: "1/31/2023"
+output: html_document
+---
+
+Setup:
+```{r}
+library(tidyverse)
+library(broom)
+library(lme4)
+library(lmerTest)
+```
+
+# Teacher ratings as a function of time
+Load teacher data:
+```{r}
+teacher_df = read.csv('../2_behavioral/outputs/teaching_behavior.csv') %>%
+  mutate(subject = factor(subject),
+         problem = factor(problem))
+str(teacher_df)
+head(teacher_df)
+```
+
+Load model predictions:
+```{r}
+model_df = read.csv('../2_behavioral/outputs/model_regressor_values.csv') %>%
+  mutate(subject = factor(subject), problem = factor(problem))
+
+str(model_df)
+head(model_df)
+```
+
+Merge teacher data and model predictions:
+```{r}
+model_ptrue = model_df %>%
+  select(subject, run, problem, ex_idx, pTrue_unscaled) %>%
+  mutate(count = 1-is.na(example)*1) %>%
+  group_by(subject, run, problem) %>%
+  mutate(n_examples = cumsum(count)) %>%
+  rename(ptrue = pTrue_unscaled)
+
+teacher_model = merge(teacher_df, model_ptrue)
+```
+
+Run full regression:
+```{r}
+full_teacher = lmer(rating ~ n_examples + ptrue + (1|subject) + (1|problem),
+                    data=teacher_model)
+summary(full_teacher)
+```
+
+Model comparison:
+```{r}
+time_teacher = lmer(rating ~ n_examples + (1|subject) + (1|problem),
+                    data=teacher_model)
+
+belief_teacher = lmer(rating ~  ptrue + (1|subject) + (1|problem),
+                    data=teacher_model)
+
+teacher_models = anova(time_teacher, belief_teacher, full_teacher) %>% tidy()
+write.csv(teacher_models,'outputs/teacher_vs_time.csv', row.names=F)
+teacher_models
+```
+
+# Student performance as a function of time
+Load student data:
+```{r}
+student_df = read.csv('outputs/student_beliefs.csv') %>%
+  group_by(worker, num_trial) %>%
+  arrange(.by_group =TRUE) %>%
+  mutate(teacher = factor(teacher), problem=factor(problem))
+str(student_df)
+head(student_df)
+```
+
+Merge student data and model predictions:
+```{r}
+student_ptrue = model_ptrue %>%
+  ungroup() %>%
+  rename(teacher=subject, num_hint=n_examples) %>%
+  select(c(-ex_idx, -count, -run))
+
+student_model = student_df %>%
+  merge(student_ptrue)
+
+head(student_model)
+```
+
+Run full regression:
+```{r}
+full_student = lmer(belief_in_true ~ num_hint + ptrue + (1|worker) + (1|problem),
+                    data=student_model)
+summary(full_student)
+```
+
+Model comparison:
+```{r}
+time_student = lmer(belief_in_true ~ num_hint + (1|worker) + (1|problem),
+                    data=student_model)
+
+belief_student = lmer(belief_in_true ~ ptrue + (1|worker) + (1|problem),
+                    data=student_model)
+
+student_models = anova(time_student, belief_student, full_student) %>% tidy()
+write.csv(student_models,'outputs/student_vs_time.csv', row.names=F)
+student_models
+```

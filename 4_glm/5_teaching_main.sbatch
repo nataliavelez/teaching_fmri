@@ -13,4 +13,4 @@ module load ncf
 module load matlab/R2021a-fasrc01
 module load spm/12.7487-fasrc01
 
-matlab -nodisplay -nosplash -r "fun_5_teaching_main(${SLURM_ARRAY_TASK_ID});exit"
+matlab -nodisplay -nosplash -r "fun_teaching_glm('parametric', ${SLURM_ARRAY_TASK_ID});exit"
