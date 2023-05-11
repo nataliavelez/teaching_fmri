@@ -3,7 +3,6 @@
 
 # # Pick functionally defined ROIs
 
-# In[1]:
 # # Use non-interactive backend
 import matplotlib
 matplotlib.use('Agg')
@@ -52,7 +51,6 @@ tstat_file = opj(tstat_dir, 'spmT_0001.nii')
 tstat_img = nilearn.image.load_img(tstat_file)
 tstat_data = tstat_img.get_fdata()
 
-# In[5]:
 df = 246.0 # hardcoded, but this is from SPM.xX.erdf
 thresholds = stats.t.ppf([0.999, 0.99, 0.95], df)
 

@@ -14,7 +14,7 @@ from tqdm import tqdm
 ## parse inputs
 _, sub = sys.argv
 sub = int(sub)
-model = 'strong' # holdover from an old grid-sampling script :)
+model = 'strong'
 
 # subject-specific data
 sub_data = teach.human_df[(teach.human_df.subject == sub)].copy()

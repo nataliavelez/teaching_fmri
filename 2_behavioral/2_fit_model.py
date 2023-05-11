@@ -34,14 +34,14 @@ sub_data = teach.human_df[(teach.human_df.subject == sub)].copy()
 
 # select model for fitting
 all_models = [
-    # Pragmatic listener
-    {'label': 'pragmatic_pref_cost', 'weights': [None, None, None], 'sampling_fun': teach.pedagogical_sampling}, # full model (pragmatic listener)
+    # Pedagogical learner
+    {'label': 'pragmatic_pref_cost', 'weights': [None, None, None], 'sampling_fun': teach.pedagogical_sampling}, # full model
     {'label': 'pragmatic_cost', 'weights': [None, 0, None], 'sampling_fun': teach.pedagogical_sampling},
     {'label': 'pragmatic_pref', 'weights': [None, None, 0], 'sampling_fun': teach.pedagogical_sampling},
     {'label': 'pragmatic', 'weights': [None, 0, 0], 'sampling_fun': teach.pedagogical_sampling},
     
-    # April 2022: Literal listener
-    {'label': 'literal_pref_cost', 'weights': [None, None, None], 'sampling_fun': teach.strong_sampling}, # full model (literal listener)
+    # Literal learner
+    {'label': 'literal_pref_cost', 'weights': [None, None, None], 'sampling_fun': teach.strong_sampling}, # full model
     {'label': 'literal_cost', 'weights': [None, 0, None], 'sampling_fun': teach.strong_sampling},
     {'label': 'literal_pref', 'weights': [None, None, 0], 'sampling_fun': teach.strong_sampling},
     {'label': 'literal', 'weights': [None, 0, 0],  'sampling_fun': teach.strong_sampling},

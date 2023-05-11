@@ -1,4 +1,4 @@
-%% script_1_tomloc_model.m
+%% script_3_tomloc_model.m
 % Natalia Velez, November 2021
 % Run subject-level modeling for ToM localizer
 

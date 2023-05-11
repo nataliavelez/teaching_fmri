@@ -35,7 +35,7 @@ head(model_df)
 Merge teacher data and model predictions:
 ```{r}
 model_ptrue = model_df %>%
-  select(subject, run, problem, ex_idx, pTrue_unscaled) %>%
+  dplyr::select(subject, run, problem, ex_idx, pTrue_unscaled) %>%
   mutate(count = 1-is.na(example)*1) %>%
   group_by(subject, run, problem) %>%
   mutate(n_examples = cumsum(count)) %>%
@@ -80,7 +80,7 @@ Merge student data and model predictions:
 student_ptrue = model_ptrue %>%
   ungroup() %>%
   rename(teacher=subject, num_hint=n_examples) %>%
-  select(c(-ex_idx, -count, -run))
+  dplyr::select(c(-ex_idx, -count, -run))
 
 student_model = student_df %>%
   merge(student_ptrue)

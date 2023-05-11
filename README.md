@@ -1,6 +1,6 @@
 # Mentalizing regions and anterior cingulate cortex represent learners’ beliefs during teaching
 Natalia Vélez <br />
-Last updated September 2022
+Last updated May 2023
 
 **Table of contents**
 
@@ -15,5 +15,3 @@ These scripts are numbered in the order you would need to execute them to fully 
 * `5_roi`: Define regions of interest and run fMRI analyses
 
 This repository contains the code used to analyze this project from start to finish, from downloading MRI data to generating figures for publication. Directories and files are numbered in the order they should be run. For example, every script in `0_download` should be run before the scripts in `1_preprocessing` and, within that folder, `0_bids_config` should be run before `1_download_sessions`. Running these scripts out of order may raise errors, as later-numbered scripts rely on intermediate outputs from earlier ones.
-
-A computationally reproducible version of these analyses is in the works—please check back soon!

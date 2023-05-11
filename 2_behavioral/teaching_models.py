@@ -2,7 +2,7 @@
 # coding: utf-8
 
 # # Teaching models with speaker preferences
-# Natalia Vélez & Alicia Chen, last updated March 2022
+# Natalia Vélez & Alicia Chen, last updated May 2023
 
 import os, sys, pprint
 import numpy as np
@@ -191,7 +191,7 @@ def masked_softmax(col, temp=1):
     return result_col
 
 ## ====== CALCULATING UTILITY ======
-## INFORMATIONAL VALUE, calculated using pedagogical sampling
+## INFORMATIONAL VALUE
 # Define the belief updating method:
 def pedagogical_belief_updating(prob_idx, past_examples, last_pH):
     '''
@@ -237,7 +237,7 @@ def pedagogical_sampling(prob_idx, past_examples=[], last_pH=None, nIter=10):
         
     return pD, pH
 
-# NEW! Simpler sampling method (for an alternative full model)
+# Simpler sampling method (for an alternative full model)
 def strong_sampling(prob_idx, past_examples=[], last_pH=None, nIter=10):
     '''
     pH is uniformly distributed among hypotheses that are consistent with past examples
@@ -256,36 +256,11 @@ def strong_sampling(prob_idx, past_examples=[], last_pH=None, nIter=10):
     return pD, pH
 
 ## SPEAKER PREFERENCES
-# (1) Edge preference
 def filter_func(values):
     '''
     Helper: Returns sum of # neighbors
     '''
     return values.sum()
-
-# def edge_pref(prob):
-#     '''
-#     Returns a dataframe of examples, weighted by the # of negative examples surrounding each point
-#     THIS IS THE ORIGINAL, BEFORE THE FIX - NV, Aug 2022
-#     '''
-#     # kernel used to count neighbors
-#     footprint = np.array([[1,1,1],
-#                           [1,0,1],
-#                           [1,1,1]])
-    
-#     # count # neighbors
-#     prob_arr = np.array(list(prob.values()))
-#     n_neighbors = np.array([ndimage.generic_filter(h, filter_func, footprint=footprint) 
-#                             for h in prob.values()])
-
-#     # make array of weights inv. related to number of neighbors
-#     weight_arr = np.multiply(prob_arr, 9-n_neighbors)
-#     weight_sums = weight_arr.sum(axis=(1,2))
-#     edge_weights = np.divide(weight_arr, weight_sums[:, np.newaxis, np.newaxis])
-    
-#     # save as dataframe
-#     edge_df = hypotheses_dataframe(edge_weights)
-#     return edge_df
 
 def edge_pref(prob):
     '''
@@ -315,52 +290,10 @@ def edge_pref(prob):
     # save as dataframe
     edge_df = hypotheses_dataframe(edge_weights)
     return edge_df
-
-def fuzzy_semantics(prob_idx, err=0.5):
-    '''
-    Adds smooth perceptual noise to a teaching problem
-    (Using this to explore one possible interpretation of the edge preference)
-    '''
-    prob = np.array(list(problems[prob_idx].values()))
-    
-    # kernel used to count neighbors
-    footprint = np.array([[1,1,1],
-                          [1,0,1],
-                          [1,1,1]])
-
-    # sample one of the neighbor's values with probability err
-    n_neighbors = np.array([ndimage.generic_filter(h, lambda values: values.sum(), footprint=footprint) for h in prob])
-    sample_neighbors = n_neighbors/8.
-    fuzzy_prob = (1-err)*prob + err*sample_neighbors
-
-    return fuzzy_prob
-
-def uncertainty_pref(prob_idx, err = 0.5):
-    '''
-    Returns a dataframe of examples, weighted by the learner's perceptual uncertainty
-    at each point
-    '''
-    # get not-noisy array
-    prob = np.array(list(problems[prob_idx].values()))
-    
-    # measure learner's uncertainty at each point
-    fuzzy_prob = fuzzy_semantics(prob_idx)
-    uncertainty = fuzzy_prob*np.log(fuzzy_prob)
-    uncertainty = np.nan_to_num(uncertainty, nan=0.0)
-    
-    # weight examples by learner's uncertainty
-    weight_arr = np.multiply(uncertainty, prob)
-    weight_sums = weight_arr.sum(axis=(1,2))
-    uncertainty_weights = np.divide(weight_arr, weight_sums[:, np.newaxis, np.newaxis])
-
-    # compute utility of all possible examples
-    uncertainty_df = hypotheses_dataframe(uncertainty_weights)
-    return  uncertainty_df
     
 # Dictionary of preference functions
 pref_dict = {
     'edge': edge_pref,
-    'uncertainty': uncertainty_pref
 }
 
 # COST, based on movement distance

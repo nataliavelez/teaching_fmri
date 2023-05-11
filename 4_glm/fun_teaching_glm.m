@@ -1,6 +1,6 @@
 function fun_teaching_glm(model, slice)
     %% fun_teaching_glm.m
-    % Natalia Velez, last update December 2022
+    % Natalia Velez, last updated December 2022
     % Catch-all function to run GLMs
     %
     % model: GLM label (string)

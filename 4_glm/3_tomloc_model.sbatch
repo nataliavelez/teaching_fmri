@@ -13,4 +13,4 @@ module load ncf
 module load matlab/R2021a-fasrc01
 module load spm/12.7487-fasrc01
 
-matlab -nodisplay -nosplash -r "script_1_tomloc_model;exit"
+matlab -nodisplay -nosplash -r "script_3_tomloc_model;exit"

@@ -1,12 +1,10 @@
 %% script_5_glm_bic
 % Natalia Velez, November 2022
-% This script calculates the Bayesian information criterion (BIC) for 
-% three GLMs:
-% (1) main: Based on the model's prediction of learners' beliefs
-% (2) empirical: Based on learners' actual reported beliefs in a separate task
-% (3) control: Based on a null model that increases the learner's belief by a
+% This script calculates the Bayesian information criterion (BIC) for
+% a (1) control GLM that increases the learner's belief by a
 % constant amount based on time elapsed, regardless of the information
-% presented
+% presented, and a (2) model-based GLM that tracks a literal learners'
+% posterior belief in the correct answer.
 
 %% Setup
 % Set up environment
@@ -25,8 +23,7 @@ valid_rois = cellfun(@isempty,regexp(roi_files,'(l|r)ACC'));
 roi_files = roi_files(valid_rois);
 
 % Find model files
-%model_names = {'controlpTrue', 'blended', 'blendedEmpirical'};
-model_names = {'empiricalBlended'};
+model_names = {'controlpTrue', 'blended'};
 model_dir = fullfile('..', '..', 'BIDS_data', 'derivatives', 'model_inputs');
 model_template = fullfile(model_dir, 'task-teaching_model-%s_desc-EXPT.mat');
 
