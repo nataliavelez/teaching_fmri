@@ -1,8 +1,8 @@
 # Estimating general linear model
 Natalia Vélez, March 2022
 
-The code in this folder uses a fork of the following package for GLM estimation:
-https://github.com/sjgershm/ccnl-fmri
+The code in this folder uses a fork of the fMRI analysis pipeline developed by the Harvard Computational Cognitive Neuroscience Laboratory:
+https://github.com/nataliavelez/ccnl-fmri
 
 And the following package for Bayesian random effects analysis:
 https://github.com/sjgershm/mfit
